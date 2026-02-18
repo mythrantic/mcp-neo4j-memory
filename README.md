@@ -86,7 +86,7 @@ AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
   "servers": {
     "neo4j-memory": {
       "command": "uv",
-      "args": ["run", "python", "server/mcp-neo4j-memory/src/mcp_neo4j_memory/server.py"],
+      "args": ["run", "python", "/home/valiantlynx/projects/mcp-neo4j-memory/src/mcp_neo4j_memory/server.py"],
       "type": "stdio",
       "env": {
         "NEO4J_URI": "${NEO4J_URI}",
