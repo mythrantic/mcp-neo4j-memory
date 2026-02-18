@@ -1,5 +1,5 @@
 {
-  "name": "neo4j-memory",
+  "name": "mcp-neo4j-memory",
   "version": "0.1.0",
   "description": "MCP Memory Server with Neo4j and RAG",
   "type": "stdio"
