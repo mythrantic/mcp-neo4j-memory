@@ -1,0 +1,66 @@
+services:
+  mcp-neo4j-memory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+    expose:
+      - 8000
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password123
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    depends_on:
+      - neo4j
+    restart: unless-stopped
+    container_name: mcp-neo4j-memory      
+
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    restart: unless-stopped
+    volumes:
+        - neo4j_conf:/conf
+        - neo4j_data:/data
+        - neo4j_import:/import
+        - neo4j_logs:/logs
+        - neo4j_plugins:/plugins
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment: 
+      - NEO4J_server.memory.pagecache.size=1G
+      - NEO4J_server.memory.heap.initial_size=1G
+      - NEO4J_server.memory.heap.max_size=1G
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.neo4j.rule=Host(`neo4j.valiantlynx.com`)"
+      - "traefik.http.routers.neo4j.entrypoints=websecure"
+      - "traefik.http.routers.neo4j.tls.certresolver=letsencrypt"
+      - "traefik.http.services.neo4j.loadbalancer.server.port=7474"
+      - "traefik.tcp.routers.neo4j-bolt.rule=HostSNI(`neo4jws.valiantlynx.com`)"
+      - "traefik.tcp.routers.neo4j-bolt.entrypoints=bolt"
+      - "traefik.tcp.services.neo4j-bolt.loadbalancer.server.port=7687"
+      - "traefik.docker.network=dokploy-network"
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password123", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  neo4j_conf:
+  neo4j_data:
+  neo4j_import:
+  neo4j_logs:
+  neo4j_plugins:
+
+networks:
+  dokploy-network:
+    external: true
