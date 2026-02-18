@@ -1,7 +1,6 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.valiantlynx/mcp-neo4j-memory",
-  "title": "MCP Neo4j Memory",
   "description": "MCP Memory Server with Neo4j and RAG capabilities",
   "repository": {
     "url": "https://github.com/mythrantic/mcp-neo4j-memory",
@@ -12,7 +11,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "http://127.0.0.1:8081/mcp"
+      "url": "https://mcp-neo4j-memory.valiantlynx.com/mcp"
     }
   ]
 }
