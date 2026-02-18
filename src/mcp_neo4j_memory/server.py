@@ -6,25 +6,14 @@ semantic search capabilities via embeddings.
 
 from __future__ import annotations
 import os
-import sys
-from pathlib import Path
-from typing import List, Optional, Any
+from typing import List, Optional
 from pydantic import BaseModel, Field
 from neo4j import AsyncGraphDatabase, AsyncDriver
 from loguru import logger
 import numpy as np
-
-# Add parent directories to path to import providers
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "client" / "simple-client" / "src" / "simple_client"))
-
-try:
-    from model_providers import get_embedding_provider, EmbeddingProviderConfig
-    HAS_PROVIDERS = True
-except ImportError:
-    logger.warning("Could not import providers - embeddings will not work")
-    HAS_PROVIDERS = False
-
 from mcp.server.fastmcp import FastMCP
+from model_providers import get_embedding_provider, EmbeddingProviderConfig
+HAS_PROVIDERS = True
 
 
 # Pydantic models matching MCP memory protocol
