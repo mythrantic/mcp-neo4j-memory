@@ -1,0 +1,64 @@
+
+# syntax=docker/dockerfile:1
+# Stage 1: Install dependencies
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS deps
+WORKDIR /workspace/server/mcp-neo4j-memory
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+RUN apt-get update && apt-get install -y \
+    git \
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+# Add GitHub to known hosts
+RUN mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts
+# Copy dependency definitions first (for better caching)
+COPY server/mcp-neo4j-memory/pyproject.toml server/mcp-neo4j-memory/uv.lock* ./
+
+ARG GITHUB_TOKEN
+RUN --mount=type=cache,target=/root/.cache/uv \
+    echo "machine github.com login ${GITHUB_TOKEN} password x-oauth-basic" > /root/.netrc \
+    && chmod 600 /root/.netrc \
+    && uv sync --frozen --no-install-project --no-dev \
+    && rm /root/.netrc
+
+
+
+# Stage 2: Build the application image
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+WORKDIR /workspace/server/mcp-neo4j-memory
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+
+# Install system dependencies including OpenCV requirements
+RUN apt-get update && apt-get install -y \
+    curl \
+    apt-transport-https \
+    git \
+    lsb-release \
+    gnupg \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    && curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the dependencies from the previous stage
+COPY --from=deps /workspace/server/mcp-neo4j-memory/.venv/ /workspace/server/mcp-neo4j-memory/.venv/
+# Copy application code
+COPY server/mcp-neo4j-memory/ ./
+# Copy dependency files (needed for the final sync)
+COPY server/mcp-neo4j-memory/pyproject.toml server/mcp-neo4j-memory/uv.lock* ./
+# Install the project (dependencies are already installed)
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+# Set the path to include the virtual environment
+ENV PATH="/workspace/server/mcp-neo4j-memory/.venv/bin:$PATH"
+# Expose port
+EXPOSE 8081
+
+CMD ["uv", "run", "python", "src/mcp_neo4j_memory/server.py"]

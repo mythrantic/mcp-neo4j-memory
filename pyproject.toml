@@ -1,0 +1,28 @@
+[project]
+name = "mcp-neo4j-memory"
+version = "0.1.0"
+description = "MCP Memory Server with Neo4j graph database and RAG capabilities"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "mcp>=1.9.0",
+    "fastmcp>=2.13.0.2",
+    "neo4j>=5.25.0",
+    "pydantic>=2.10.5",
+    "loguru>=0.7.3",
+    "numpy>=2.2.1",
+    "model-providers"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.24.0",
+]
+
+[tool.uv.sources]
+model-providers = { git = "git+https://github.com/mythrantic/model-providers.git" }
