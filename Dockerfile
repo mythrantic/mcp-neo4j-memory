@@ -2,7 +2,7 @@
 # syntax=docker/dockerfile:1
 # Stage 1: Install dependencies
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS deps
-WORKDIR /workspace/server/mcp-neo4j-memory
+WORKDIR /workspace
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 RUN apt-get update && apt-get install -y \
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /root/.ssh && \
     ssh-keyscan github.com >> /root/.ssh/known_hosts
 # Copy dependency definitions first (for better caching)
-COPY server/mcp-neo4j-memory/pyproject.toml server/mcp-neo4j-memory/uv.lock* ./
+COPY pyproject.toml uv.lock* ./
 
 ARG GITHUB_TOKEN
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Stage 2: Build the application image
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
-WORKDIR /workspace/server/mcp-neo4j-memory
+WORKDIR /workspace
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
@@ -48,16 +48,16 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the dependencies from the previous stage
-COPY --from=deps /workspace/server/mcp-neo4j-memory/.venv/ /workspace/server/mcp-neo4j-memory/.venv/
+COPY --from=deps /workspace/.venv/ /workspace/.venv/
 # Copy application code
-COPY server/mcp-neo4j-memory/ ./
+COPY ./ ./
 # Copy dependency files (needed for the final sync)
-COPY server/mcp-neo4j-memory/pyproject.toml server/mcp-neo4j-memory/uv.lock* ./
+COPY pyproject.toml uv.lock* ./
 # Install the project (dependencies are already installed)
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 # Set the path to include the virtual environment
-ENV PATH="/workspace/server/mcp-neo4j-memory/.venv/bin:$PATH"
+ENV PATH="/workspace/.venv/bin:$PATH"
 # Expose port
 EXPOSE 8081
 
